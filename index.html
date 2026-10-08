@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScriptuAI - Prototype</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: #fff; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        button { background: #00ff88; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; color: #121212; font-weight: bold; }
+        .box { background: #1e1e1e; padding: 15px; margin-top: 15px; border-radius: 5px; min-height: 50px; }
+        .detected { border: 2px solid #00ff88; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ScriptuAI: Live Bible Voice Detector</h1>
+        <button id="start-btn">🎙️ Start Listening</button>
+        <p>Status: <span id="status">Idle</span></p>
+
+        <h3>What the Preacher is Saying:</h3>
+        <div id="transcript-box" class="box">...</div>
+
+        <h3>AI Detected Scriptures (Queue):</h3>
+        <div id="detection-box" class="box detected">No scriptures detected yet. (Try saying "John 3" or "Genesis 1" once active)</div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const statusText = document.getElementById('status');
+        const transcriptBox = document.getElementById('transcript-box');
+         const detectionBox = document.getElementById('detection-box');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            alert("Your browser does not support free speech recognition. Please use Google Chrome or Edge.");
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            startBtn.addEventListener('click', () => {
+                try {
+                    recognition.start();
+                    statusText.innerText = "Listening to live audio...";
+                    startBtn.innerText = "🛑 Listening...";
+                    startBtn.style.background = "#ff4444";
+                    startBtn.style.color = "#fff";
+                } catch(e) {
+                    recognition.stop();
+                    statusText.innerText = "Stopped.";
+                    startBtn.innerText = "🎙️ Start Listening";
+                    startBtn.style.background = "#00ff88";
+                    startBtn.style.color = "#121212";
+                }
+            });
+
+            recognition.onresult = (event) => {
+                let currentTranscript = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    currentTranscript += event.results[i].transcript;
+                }
+                
+                transcriptBox.innerText = currentTranscript;
+                detectBibleVerses(currentTranscript.toLowerCase());
+            };
+        }
+
+        function detectBibleVerses(text) {
+            if (text.includes("john 3")) {
+                detectionBox.innerHTML = "<strong>John 3:16</strong><br>'For God so loved the world that He gave His only begotten Son...'";
+            } else if (text.includes("genesis 1")) {
+                detectionBox.innerHTML = "<strong>Genesis 1:1</strong><br>'In the beginning, God created the heavens and the earth.'";
+            }
+        }
+    </script>
+</body>
+</html>
